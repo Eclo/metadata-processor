@@ -71,6 +71,7 @@
     <Compile Include="Core\ClrIntegrationTests.cs" />
     <Compile Include="Core\StubsGenerationTests.cs" />
     <Compile Include="Core\Tables\nanoSignaturesTableTests.cs" />
+    <Compile Include="Core\Tables\nanoStringTableTests.cs" />
     <Compile Include="Core\Utility\DumperTests.cs" />
     <Compile Include="Core\Utility\LoadHintsAssemblyResolverTests.cs" />
     <Compile Include="Core\Utility\Crc32Tests.cs" />

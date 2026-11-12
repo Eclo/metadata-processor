@@ -21,6 +21,36 @@ The main use of the metadata processor is packaged as a MSBuild task: [nanoFrame
 
 There are few use cases where the build task cannot be used. E.g., in software that generates source code at runtime, compiles the code via Roslyn, executes it on the virtual device, and uses the output for further processing. The metadata processor is required as a companion to Roslyn to convert the generated .NET assemblies to .NET **nanoFramework** .pe assemblies. The second package, [nanoFramework.Tools.MetadataProcessor.CLI](https://www.nuget.org/packages/nanoFramework.Tools.MetadataProcessor.CLI), contains a CLI version of the tool for this purpose. It is packaged as content: if added to a project, the tool will be distributed with the results of that project. If the package is added to a non-SDK-style project (e.g., .NET Framework project), make sure to set the *Copy to Output Directory* property for the files, as the package manager does not automatically do that. The code in the project should run the CLI with arguments *-loadhints*, *-parse* and *-compile* (in that order!) to create the .pe assembly.
 
+### String tables
+
+The metadata processor always generates string-table contract version 2. It
+removes unused local metadata strings, pools UTF-8 suffixes and uses a smaller
+fixed shared dictionary. Assembly names remain locally readable. No string-table
+selection option is required or supported in the CLI, MSBuild task or firmware.
+
+Use matching nanoCLR firmware, which also requires string-table contract version 2.
+Rebuild **all** deployed PE assemblies and regenerate PDBX files when migrating.
+Version-1 assemblies are no longer supported. Independently updated applications
+remain supported when they use the firmware's contract.
+
+The shared catalog is generated from `assets\compact-string-table.json`:
+
+```powershell
+.\tools\Generate-StringTable.ps1 -InterpreterRoot C:\path\to\nf-interpreter
+.\tools\Generate-StringTable.ps1 -InterpreterRoot C:\path\to\nf-interpreter -Check
+```
+
+The generated outputs are `MetadataProcessor.Shared\Utility\nanoStringsConstants.cs`
+and the interpreter's `src\CLR\Core\StringTableData.cpp`.
+
+The version-2 catalog is frozen at 697 entries, including common v2 generic
+type, parameter and reflection names. Exact preview versions and package/DLL
+hashes are pinned in the manifest. The generator rejects changes to entries or
+IDs using the frozen contract fingerprint; changes require a new contract version.
+Rebuild any compact PEs produced with the earlier prototype catalog.
+See `MetadataProcessor.Shared\Tables\CLAUDE.md` for the layout invariants,
+selection evidence and measurement limitations.
+
 ## Developers guide
 
 ### Cloning the repository
